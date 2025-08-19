@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群聊加入</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <style>
+        page {
+            background-color: #fff;
+            height: 100%;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0 32px;
+            box-sizing: border-box;
+        }
+
+        .group-info {
+            margin-top: 3rem;
+            padding-bottom: 24px;
+            color: #333;
+            font-size: 17px;
+            text-align: center;
+        }
+
+        .group-icon {
+            width: 128px;
+            height: 128px;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .group-name {
+            margin-top: 24px;
+            font-size: 22px;
+            color: #000;
+        }
+
+        .group-info-tip {
+            color: #999999;
+            font-size: 14px;
+            margin-top: 8px;
+            text-align: center;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .divider-line {
+            height: 1px;
+            background-color: #e5e5e5;
+            margin: 0 0 20px;
+            width: 100%;
+        }
+
+        .content {
+            width: 100%;
+            padding: 0;
+            margin: 20px 0 0 10px;
+        }
+
+        .ext-info {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .info-item {
+            position: relative;
+            padding-left: 0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            color: #999999;
+            font-size: 14px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .dot {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            background-color: currentColor;
+            mask-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='10' cy='10' r='1.5' fill-rule='evenodd'/%3e%3c/svg%3e");
+            flex-shrink: 0;
+        }
+
+        .btn-area {
+            width: 33.33%;
+            padding: 20px 0;
+            margin: 5rem auto 0;
+            box-sizing: border-box;
+        }
+
+        .join-btn {
+            width: 100%;
+            padding: 12px 0;
+            height: 44px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background: rgb(73, 194, 101);
+            box-shadow: 0 4px 8px rgba(73, 194, 101, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: normal;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .join-btn[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .popup-content {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            width: 80vw;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .popup-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .popup-btn {
+            background: #07C160;
+            color: #fff;
+            border-radius: 4px;
+            padding: 8px 0;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .popup-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            .group-info {
+                margin-top: 2rem;
+            }
+            
+            .join-btn {
+                height: 40px;
+                font-size: 15px;
+            }
+            
+            .btn-area {
+                width: 50%;
+                margin: 10rem auto 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="group-info">
+                <img :src="'https://beiying.grkx.cn' + info.wxg_img" class="group-icon">
+                <div class="group-name">
+                    <div class="cr-name">{{info.wxg_title}}</div>
+                </div>
+                <div class="group-info-tip">{{info.wxg_subtitle}}</div>
+            </div>
+            
+            <div class="divider-line"></div>
+            
+            <div class="content">
+                <div class="ext-info">
+                    <div class="info-item">
+                        <div class="dot"></div>
+                        <div>该群聊人数较多，为减少新消息给你带来的打扰，建议谨慎加入。</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="dot"></div>
+                        <div>为维护微信平台绿色网络环境，请勿在群内传播违法违规内容。</div>
+                    </div>
+                </div>
+                
+                <div class="btn-area">
+                    <button 
+                        class="join-btn" 
+                        @click="handlePay" 
+                        :disabled="loading"
+                    >
+                        {{ loading ? '处理中...' : info.wxg_buttitle }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- 支付结果弹窗 -->
+            <div class="popup-backdrop" v-if="showPopup" @click="closePopup"></div>
+            <div class="popup-content" v-if="showPopup">
+                <div class="popup-title">支付提示</div>
+                <div class="popup-message">{{ popupMessage }}</div>
+                <button class="popup-btn" @click="closePopup">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                info: {
+                    wxg_img: '',
+                    wxg_title: '',
+                    wxg_subtitle: '',
+                    wxg_buttitle: '加入群聊',
+                    wxg_money: 0,
+                    type: ''
+                },
+                id: 0,
+                loading: false,
+                popupMessage: '',
+                payResult: null,
+                showPopup: false
+            },
+            mounted() {
+                this.initData();
+            },
+            methods: {
+                initData() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const storageKey = urlParams.get('storageKey');
+                    const data = JSON.parse(localStorage.getItem(storageKey));
+                    localStorage.removeItem(storageKey);
+                    
+                    if (data) {
+                        console.log('初始化数据:', data);
+                        this.info = data.wxgroup || {};
+                        this.id = data.id || this.id;
+                        
+                        if (this.info.confirm_content) {
+                            setTimeout(() => {
+                                alert(this.info.confirm_content);
+                            }, 300);
+                        }
+                    } else {
+                        this.showMessage('数据加载失败');
+                    }
+                },
+                showMessage(msg) {
+                    this.popupMessage = msg;
+                    this.showPopup = true;
+                },
+                async handlePay() {
+                    if (this.loading) return;
+                    
+                    try {
+                        this.loading = true;
+                        
+                        if (this.info.type == "1") {
+                            this.showPaymentOptions();
+                            return;
+                        }
+                        
+                        await this.processPayment('wxpay');
+                        
+                    } catch (error) {
+                        console.error('支付流程错误:', error);
+                        this.showMessage(error.message || '支付失败');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                async processPayment(paymentType) {
+                    const params = new URLSearchParams();
+                    params.append('id', this.id);
+                    params.append('type', paymentType);
+                    
+                    const response = await fetch('https://beiying.grkx.cn/group/index/getpay', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Referer': 'https://www.qxlwm.cn/'
+                        },
+                        body: params
+                    });
+                    
+                    const result = await response.json();
+                    console.log('支付结果:', result);
+                    
+                    if (!response.ok) {
+                        throw new Error(result.msg || '支付请求失败');
+                    }
+                    
+                    if (result.status === 1) {
+                        window.location.href = result.msg;
+                    } else if (result.status === 2) {
+                        this.showHtmlResult(result.msg);
+                    } else {
+                        throw new Error(result.msg || '支付处理失败');
+                    }
+                },
+                showPaymentOptions() {
+                    const options = ['微信支付', '支付宝支付'];
+                    const selected = confirm(`请选择支付方式:\n\n1. ${options[0]}\n2. ${options[1]}`);
+                    
+                    if (selected === null) {
+                        this.showMessage('已取消支付');
+                        return;
+                    }
+                    
+                    const type = selected ? 'wxpay' : 'alipay';
+                    this.processPayment(type);
+                },
+                showHtmlResult(html) {
+                    this.payResult = html;
+                    this.showMessage('支付成功，即将跳转...');
+                },
+                closePopup() {
+                    this.showPopup = false;
+                    if (this.payResult) {
+                        // 实际项目中这里可以处理支付结果
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

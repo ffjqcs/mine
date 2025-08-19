@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频分享</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <style>
+        .container {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .idjshow {
+            width: 94%;
+            height: 30px;
+            background: #000;
+            opacity: 0.8;
+            border-radius: 15px;
+            line-height: 30px;
+            color: #FFF;
+            text-align: center;
+            margin: 0 auto;
+            z-index: 99999;
+            position: fixed;
+            top: 20px;
+            left: 3%;
+            font-size: 14px;
+        }
+
+        .video-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .qunbtn {
+            position: fixed;
+            width: 90%;
+            left: 5%;
+            bottom: 15px;
+            background-color: #38761D;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 16px;
+            padding: 10px 0;
+            z-index: 999;
+            border: none;
+            cursor: pointer;
+        }
+
+        .xuanfu {
+            position: fixed;
+            right: 15px;
+            bottom: 75px;
+            z-index: 999;
+        }
+
+        .xuanfu img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .mask-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mask-box-sm {
+            background-color: #fff;
+            width: 80%;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .mask-box-sm img {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+        }
+
+        .mask-box-tt {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .ewm-box img {
+            width: 150px;
+            height: 150px;
+            margin: 10px auto;
+        }
+
+        .pay-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pay-content {
+            background-color: #fff;
+            width: 80%;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .pay-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .pay-options {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .pay-option {
+            width: 40%;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .pay-option img {
+            width: 60px;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="idjshow" v-if="showTip">{{ currentTip }}*** 刚刚支付了{{ info.wxg_money }}元</div>
+
+            <video 
+                class="video-bg"
+                :src="info.wxg_img" 
+                autoplay
+                loop
+                muted
+                playsinline
+                controls
+                @play="handleVideoPlay"
+                @error="handleVideoError">
+            </video>
+
+            <button class="qunbtn" @click="handlePay" :disabled="btnDisabled" v-html="formattedButtonText"></button>
+
+            <div class="xuanfu" @click="showKefu = true">
+                <img class="kefu2" src="https://beiying.grkx.cn/template/group/index/images/service.png">
+            </div>
+
+            <div class="mask-box" v-if="showKefu" @click="showKefu = false">
+                <div class="mask-box-sm" @click.stop>
+                    <div @click="showKefu = false"><img src="https://beiying.grkx.cn/template/group/index/images/close.png"></div>
+                    <div class="mask-box-tt text-center">专属客服<br><text style="letter-spacing:0.05rem;text-indent:0.05rem">长按二维码添加</text></div>
+                    <div class="ewm-box"><img :src="info.wxg_kefu"></div>
+                </div>
+            </div>
+
+            <div class="pay-modal" v-if="showPayModal" @click="showPayModal = false">
+                <div class="pay-content" @click.stop>
+                    <div class="pay-title">请选择支付方式</div>
+                    <div class="pay-options">
+                        <div class="pay-option" @click="btnfun('wxpay')">
+                            <img src="https://beiying.grkx.cn/template/static/wechat.png">
+                        </div>
+                        <div class="pay-option" @click="btnfun('alipay')">
+                            <img src="https://beiying.grkx.cn/template/static/alipay.png">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                id: '',
+                info: {
+                    wxg_title: '',
+                    wxg_buttitle: '',
+                    wxg_money: 0,
+                    wxg_img: '',
+                    wxg_kefu: '',
+                    type: '',
+                    confirm_content: ''
+                },
+                showKefu: false,
+                showPayModal: false,
+                btnDisabled: false,
+                showTip: false,
+                currentTip: '',
+                tipNames: ["弘毅","李涛","豪哥","海阔天空","博文","小蓝","吴哥","丰富","格局","天天歌","柒依","晴天","黑羽","(宝ᴗ宝)"],
+                tipInterval: null,
+                cityName: ''
+            },
+            computed: {
+                formattedButtonText() {
+                    let text = this.info.wxg_buttitle || '';
+                    text = text.replace(/$$加粗$$/g, '<strong>').replace(/$$\/加粗$$/g, '</strong>');
+                    text = text.replace(/$$加大\+(\d+)$$/g, '<span style="font-size:$1em">').replace(/$$\/加大$$/g, '</span>');
+                    return text;
+                }
+            },
+            methods: {
+                startTipAnimation() {
+                    let index = 0;
+                    this.tipInterval = setInterval(() => {
+                        this.currentTip = this.tipNames[index];
+                        this.showTip = true;
+                        setTimeout(() => {
+                            this.showTip = false;
+                        }, 1300);
+                        index = (index + 1) % this.tipNames.length;
+                    }, 1500);
+                },
+                async handlePay() {
+                    try {
+                        this.btnDisabled = true;
+                        
+                        const params = new URLSearchParams();
+                        params.append('id', this.id);
+                        params.append('type', 'wxpay');
+                        
+                        const response = await fetch('https://beiying.grkx.cn/group/index/getpay', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: params
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.status === 1) {
+                            window.location.href = result.msg;
+                        } else if (result.status === 2) {
+                            this.showPaymentResult(result.msg);
+                        } else {
+                            throw new Error(result.msg || '支付失败');
+                        }
+                        
+                    } catch (error) {
+                        console.error('支付处理错误:', error);
+                        alert('支付失败: ' + error.message);
+                    } finally {
+                        this.btnDisabled = false;
+                    }
+                },
+                btnfun(type) {
+                    this.showPayModal = false;
+                    this.processPayment(type);
+                },
+                async processPayment(type) {
+                    const params = new URLSearchParams();
+                    params.append('id', this.id);
+                    params.append('type', type);
+                    
+                    const response = await fetch('https://beiying.grkx.cn/group/index/getpay', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: params
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 1) {
+                        window.location.href = result.msg;
+                    } else if (result.status === 2) {
+                        this.showPaymentResult(result.msg);
+                    } else {
+                        throw new Error(result.msg || '支付失败');
+                    }
+                },
+                showPaymentResult(html) {
+                    const newWindow = window.open();
+                    newWindow.document.write(html);
+                },
+                handleVideoPlay() {
+                    console.log('视频开始播放');
+                },
+                handleVideoError(e) {
+                    console.error('视频播放错误:', e);
+                    alert('视频加载失败');
+                }
+            },
+            mounted() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const storageKey = urlParams.get('storageKey');
+                const data = JSON.parse(localStorage.getItem(storageKey));
+                localStorage.removeItem(storageKey);
+                
+                if (data) {
+                    this.id = data.id || this.id;
+                    this.info = data.wxgroup || {};
+                    document.title = this.info.wxg_title || '默认标题';
+                    this.startTipAnimation();
+                }
+            },
+            beforeDestroy() {
+                if (this.tipInterval) {
+                    clearInterval(this.tipInterval);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
