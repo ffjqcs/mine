@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群聊分享平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <style>
+        /* 通用样式 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .loading-text {
+            margin-bottom: 10px;
+        }
+        
+        .error-message {
+            color: red;
+            margin: 10px 0;
+            max-width: 80%;
+            word-break: break-word;
+        }
+        
+        .action-button {
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: #409eff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .action-button:hover {
+            background: #66b1ff;
+        }
+        
+        /* 普通群聊分享样式 */
+        .share-container {
+            padding-bottom: 60px;
+            background-color: #f5f5f5;
+        }
+        
+        .idjshow {
+            width: 94%;
+            height: 30px;
+            background: #000;
+            opacity: 0.8;
+            border-radius: 15px;
+            line-height: 30px;
+            color: #FFF;
+            text-align: center;
+            margin: 0 auto;
+            z-index: 99999;
+            position: fixed;
+            top: 20px;
+            left: 3%;
+            font-size: 14px;
+        }
+        
+        .qun {
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 0;
+            text-align: center;
+            background-color: #f2f2f2;
+            border-bottom: 1px solid #c1c0c5;
+        }
+        
+        .qun img {
+            width: 100px;
+            height: 100px;
+            border-radius: 5px;
+            margin: 0 auto;
+        }
+        
+        .quntit {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .num {
+            font-size: 14px;
+        }
+        
+        .qunz {
+            background-color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .qunpeople .title2 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .peoplez {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .peoplef {
+            width: 20%;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .peoplef img {
+            width: 50px;
+            height: 50px;
+            border-radius: 10%;
+            margin: 0 auto;
+        }
+        
+        .peoplef div {
+            font-size: 12px;
+            color: #aeaeae;
+            width: 80%;
+            margin: 5px auto 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .qunstate .title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .qunbtn {
+            position: fixed;
+            width: 90%;
+            margin-left: 5%;
+            font-size: 18px;
+            color: #fff;
+            text-align: center;
+            padding: 15px 0;
+            border-radius: 7.5px;
+            background-color: #4A6398;
+            bottom: 10px;
+            z-index: 999;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .xuanfu {
+            position: fixed;
+            right: 15px;
+            bottom: 100px;
+            z-index: 999;
+        }
+        
+        .xuanfu img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+        
+        .modal-mask {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-card {
+            position: relative;
+            z-index: 10001;
+            width: 80%;
+            max-width: 300px;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: #fe1f3e;
+            width: 100%;
+            height: 75px;
+            position: relative;
+            padding-top: 10px;
+        }
+        
+        .modal-close {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            width: 20px;
+            height: 20px;
+            z-index: 2;
+            cursor: pointer;
+        }
+        
+        .modal-header-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            padding: 0 30px;
+        }
+        
+        .modal-main-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        
+        .modal-sub-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .modal-divider {
+            width: 100%;
+            height: 1px;
+            background: #a0d6b4;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            background-color: #fff;
+        }
+        
+        .modal-qrcode {
+            width: 140px;
+            height: 140px;
+            border: 1px solid #f5f5f5;
+        }
+        
+        .pay-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pay-content {
+            background-color: #fff;
+            width: 80%;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .pay-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .pay-options {
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .pay-option {
+            width: 40%;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .pay-option img {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .qunliuyan {
+            background-color: #fff;
+            padding: 0 10px;
+            margin-bottom: 70px;
+        }
+        
+        .liuyantit {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 0;
+        }
+        
+        .liuyanz-container {
+            padding: 10px 0;
+            position: relative;
+        }
+        
+        .liuyanz {
+            display: flex;
+            align-items: center;
+            padding: 0;
+            position: relative;
+        }
+        
+        .qleft {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 5px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .qcenter {
+            flex: 1;
+            min-width: 0;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .nichen {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        .liuyan {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.5;
+            word-break: break-word;
+            white-space: pre-wrap;
+            padding-right: 50px;
+            margin: 0;
+        }
+        
+        .qright {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .qright img {
+            width: 15px;
+            height: 15px;
+            margin-right: 3px;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #f0f0f0;
+            margin: 5px 0 5px 50px;
+        }
+        
+        .tousu {
+            position: fixed;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .tousu img {
+            width: 30px;
+            height: 70px;
+        }
+        
+        /* 图片分享样式 */
+        .share-img-container {
+            position: relative;
+            padding-bottom: 60px;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .service-btn {
+            position: fixed;
+            right: 15px;
+            bottom: 125px;
+            width: 40px;
+            height: 40px;
+            z-index: 999;
+        }
+        
+        .service-icon {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 视频分享样式 */
+        .share-shp-container {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .video-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+        
+        .xuanfu-shp {
+            position: fixed;
+            right: 15px;
+            bottom: 75px;
+            z-index: 999;
+        }
+        
+        .xuanfu-shp img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .mask-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .mask-box-sm {
+            background-color: #fff;
+            width: 80%;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .mask-box-sm img {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+        }
+        
+        .mask-box-tt {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .ewm-box img {
+            width: 150px;
+            height: 150px;
+            margin: 10px auto;
+        }
+        
+        /* 群聊加入样式 */
+        .share-gmb-container {
+            background-color: #fff;
+            height: 100%;
+        }
+        
+        .share-gmb-container .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0 32px;
+            box-sizing: border-box;
+        }
+        
+        .group-info {
+            margin-top: 3rem;
+            padding-bottom: 24px;
+            color: #333;
+            font-size: 17px;
+            text-align: center;
+        }
+        
+        .group-icon {
+            width: 128px;
+            height: 128px;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .group-name {
+            margin-top: 24px;
+            font-size: 22px;
+            color: #000;
+        }
+        
+        .group-info-tip {
+            color: #999999;
+            font-size: 14px;
+            margin-top: 8px;
+            text-align: center;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        .divider-line {
+            height: 1px;
+            background-color: #e5e5e5;
+            margin: 0 0 20px;
+            width: 100%;
+        }
+        
+        .content {
+            width: 100%;
+            padding: 0;
+            margin: 20px 0 0 10px;
+        }
+        
+        .ext-info {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .info-item {
+            position: relative;
+            padding-left: 0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            color: #999999;
+            font-size: 14px;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .dot {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            background-color: currentColor;
+            mask-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='10' cy='10' r='1.5' fill-rule='evenodd'/%3e%3c/svg%3e");
+            flex-shrink: 0;
+        }
+        
+        .btn-area {
+            width: 33.33%;
+            padding: 20px 0;
+            margin: 5rem auto 0;
+            box-sizing: border-box;
+        }
+        
+        .join-btn {
+            width: 100%;
+            padding: 12px 0;
+            height: 44px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background: rgb(73, 194, 101);
+            box-shadow: 0 4px 8px rgba(73, 194, 101, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: normal;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .join-btn[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .popup-content {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            width: 80vw;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .popup-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .popup-btn {
+            background: #07C160;
+            color: #fff;
+            border-radius: 4px;
+            padding: 8px 0;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .popup-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .share-gmb-container .container {
+                padding: 0 16px;
+            }
+            
+            .group-info {
+                margin-top: 2rem;
+            }
+            
+            .join-btn {
+                height: 40px;
+                font-size: 15px;
+            }
+            
+            .btn-area {
+                width: 50%;
+                margin: 10rem auto 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 加载状态 -->
+        <div class="container" v-if="loading">
+            <div class="loading-text">正在加载，请稍候...</div>
+        </div>
+        
+        <!-- 错误状态 -->
+        <div class="container" v-if="errorMessage && !loading">
+            <div class="error-message">{{ errorMessage }}</div>
+            <button class="action-button" @click="goToHomePage">返回首页</button>
+        </div>
+        
+        <!-- 普通群聊分享 -->
+        <div class="share-container" v-if="!loading && !errorMessage && currentView === 'share'">
+            <div class="idjshow" v-if="showTip">{{ currentTip }}*** 刚刚支付了{{ info.wxg_money }}元</div>
+
+            <img v-if="info.hb_img" :src="'https://beiying.grkx.cn' + info.hb_img" style="width:100%;display:block;">
+
+            <div class="qun">
+                <img :src="'https://beiying.grkx.cn' + info.wxg_img">
+                <div class="quntit" id="quntit">{{ info.wxg_title }}</div>
+                <div class="num" style="color:#d43c3c;font-weight:600">{{ info.wxg_subtitle }}</div>
+            </div>
+
+            <div class="qunz">
+                <div class="qunpeople">
+                    <div class="title2">群成员({{ randomMemberCount }}人)</div>
+                    <div class="peoplez">
+                        <div class="peoplef" v-for="(vo, index) in qccontent" :key="index">
+                            <img :src="'https://beiying.grkx.cn/face/' + info.wxg_headfile + '/' + vo.headimg">
+                            <div>{{ vo.nickname }}</div>
+                        </div>
+                        <div class="peoplef">
+                            <img src="https://beiying.grkx.cn/template/group/index/images/photoadd.png">
+                        </div>
+                        <div class="peoplef">
+                            <img src="https://beiying.grkx.cn/template/group/index/images/photojian.png" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="qunstate">
+                    <div class="title" style="font-weight: 400;">{{ info.wxg_qjj_title }}<span style="color: red;"><i style="font-weight: 400;">（付款即代表已读！）</i></span></div>
+                    <div class="qs" style="color:#7e7e7e"><div>{{ info.wxg_qjj_content }}</div></div>
+                </div>
+
+                <div class="qunstate">
+                    <div class="title" style="font-weight: 400;">{{ info.wxg_kuai_title }}<span style="color: red;"><i style="font-weight: 400;">（付款即代表已读！）</i></span></div>
+                    <div class="question" v-for="(vo, index) in content" :key="index">
+                        <div class="ad">{{ vo.title }}</div>
+                        <div class="aw">{{ vo.content }}</div>
+                    </div>
+                </div>
+
+                <div class="qunfuli" v-if="info.wxg_kuai_title1 && info.wxg_kuai_imgs1" style="font-weight: 400;">
+                    <div class="title" style="font-weight: 400;">{{ info.wxg_kuai_title1 }}<span style="color: #FF0000;"><i style="font-weight: 400;">（付款即代表已读！）</i></span></div>
+                    <div class="fuli svvv" v-html="processedImgs"></div>
+                </div>
+
+                <div class="yuedu">阅读{{ info.wxg_redcount }}</div>
+
+                <div class="qunicon">
+                    <div class="qunicon1">
+                        <div class="icon1" @click="shareGroup">
+                            <img src="https://beiying.grkx.cn/template/group/index/images/icon1.png">
+                            <div>分享</div>
+                        </div>
+                        <div class="icon1" @click="collectGroup">
+                            <img src="https://beiying.grkx.cn/template/group/index/images/icon2.png">
+                            <div>收藏</div>
+                        </div>
+                    </div>
+                    <div class="qunicon1">
+                        <div class="icon1">
+                            <img src="https://beiying.grkx.cn/template/group/index/images/icon3.jpg">
+                            <div>{{ info.wxg_dzcount }}</div>
+                        </div>
+                        <div class="icon1">
+                            <img src="https://beiying.grkx.cn/template/group/index/images/icon4.jpg">
+                            <div>{{ info.wxg_xxcount }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qunliuyan">
+                <div class="liuyantit">
+                    <div class="lyo">群友评论（精选）</div>
+                </div>
+                <div class="liuyanz-container" v-for="(vo, index) in qcontent" :key="index">
+                    <div class="liuyanz">
+                        <img class="qleft" :src="'https://beiying.grkx.cn/face/' + info.wxg_headfile + '/' + vo.headimg">
+                        <div class="qcenter">
+                            <div class="nichen">{{ vo.nickname }}</div>
+                            <div class="liuyan">{{ vo.title }}</div>
+                        </div>
+                        <div class="qright">
+                            <img src="https://beiying.grkx.cn/template/group/index/images/icon3.png">
+                            <div>{{ vo.count }}</div>
+                        </div>
+                    </div>
+                    <div class="divider" v-if="index < qcontent.length - 1"></div>
+                </div>
+            </div>
+
+            <button class="qunbtn" 
+                    :style="{backgroundColor: info.btn_color || '#4A6398'}" 
+                    @click="handlePay">
+                {{ info.wxg_buttitle }}
+            </button>
+
+            <div class="xuanfu" @click="showKefu = true">
+                <img class="kefu2" src="https://beiying.grkx.cn/template/group/index/images/service.png">
+            </div>
+
+            <div class="custom-modal" v-if="showKefu">
+                <div class="modal-mask" @click="showKefu = false"></div>
+                <div class="modal-card">
+                    <div class="modal-header">
+                        <img class="modal-close" 
+                            src="https://beiying.grkx.cn/template/static/close.png"
+                            @click="showKefu = false"/>
+                        <div class="modal-header-content">
+                            <div class="modal-main-text">专属客服</div>
+                            <div class="modal-sub-text">长按二维码添加</div>
+                        </div>
+                    </div>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <img :src="'https://beiying.grkx.cn' + info.wxg_kefu" 
+                            class="modal-qrcode"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pay-modal" v-if="showPayModal" @click="showPayModal = false">
+                <div class="pay-content" @click.stop>
+                    <div class="pay-title">请选择支付方式</div>
+                    <div class="pay-options">
+                        <div class="pay-option" @click="btnfun('wxpay')">
+                            <img src="https://beiying.grkx.cn/template/static/wechat.png">
+                        </div>
+                        <div class="pay-option" @click="btnfun('alipay')">
+                            <img src="https://beiying.grkx.cn/template/static/alipay.png">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tousu">
+                <a href="https://beiying.grkx.cn/weixin/complaint.html">
+                    <img src="https://beiying.grkx.cn/template/static/tousu.png" class="right-middle">
+                </a>
+            </div>
+        </div>
+        
+        <!-- 图片分享 -->
+        <div class="share-img-container" v-if="!loading && !errorMessage && currentView === 'share_img'">
+            <div class="idjshow" v-if="showTip">{{ currentTip }}*** 刚刚支付了{{ info.wxg_money }}元</div>
+
+            <div style="width:100%;">
+                <img :src="'https://beiying.grkx.cn' + info.wxg_img" style="width:100%;">
+            </div>
+
+            <button class="qunbtn" @click="handlePay" :disabled="btnDisabled" v-html="formattedButtonText"></button>
+
+            <div class="service-btn" @click="toggleKefu">
+                <img class="service-icon" src="https://beiying.grkx.cn/template/group/index/images/service.png">
+            </div>
+            
+            <div class="custom-modal" v-if="showKefu">
+                <div class="modal-mask" @click="toggleKefu"></div>
+                <div class="modal-card">
+                    <div class="modal-header">
+                        <img class="modal-close" 
+                            src="https://beiying.grkx.cn/template/beiying.grkx.cn/close.png"
+                            @click="toggleKefu"/>
+                        <div class="modal-header-content">
+                            <div class="modal-main-text">专属客服</div>
+                            <div class="modal-sub-text">长按二维码添加</div>
+                        </div>
+                    </div>
+                    <div class="modal-divider"></div>
+                    <div class="modal-body">
+                        <img :src="'https://beiying.grkx.cn' + info.wxg_kefu" 
+                            class="modal-qrcode"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 视频分享 -->
+        <div class="share-shp-container" v-if="!loading && !errorMessage && currentView === 'share_shp'">
+            <div class="idjshow" v-if="showTip">{{ currentTip }}*** 刚刚支付了{{ info.wxg_money }}元</div>
+
+            <video 
+                class="video-bg"
+                :src="info.wxg_img" 
+                autoplay
+                loop
+                muted
+                playsinline
+                controls
+                @play="handleVideoPlay"
+                @error="handleVideoError">
+            </video>
+
+            <button class="qunbtn" @click="handlePay" :disabled="btnDisabled" v-html="formattedButtonText"></button>
+
+            <div class="xuanfu-shp" @click="showKefu = true">
+                <img class="kefu2" src="https://beiying.grkx.cn/template/group/index/images/service.png">
+            </div>
+
+            <div class="mask-box" v-if="showKefu" @click="showKefu = false">
+                <div class="mask-box-sm" @click.stop>
+                    <div @click="showKefu = false"><img src="https://beiying.grkx.cn/template/group/index/images/close.png"></div>
+                    <div class="mask-box-tt text-center">专属客服<br><text style="letter-spacing:0.05rem;text-indent:0.05rem">长按二维码添加</text></div>
+                    <div class="ewm-box"><img :src="info.wxg_kefu"></div>
+                </div>
+            </div>
+
+            <div class="pay-modal" v-if="showPayModal" @click="showPayModal = false">
+                <div class="pay-content" @click.stop>
+                    <div class="pay-title">请选择支付方式</div>
+                    <div class="pay-options">
+                        <div class="pay-option" @click="btnfun('wxpay')">
+                            <img src="https://beiying.grkx.cn/template/static/wechat.png">
+                        </div>
+                        <div class="pay-option" @click="btnfun('alipay')">
+                            <img src="https://beiying.grkx.cn/template/static/alipay.png">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 群聊加入 -->
+        <div class="share-gmb-container" v-if="!loading && !errorMessage && currentView === 'share_gmb'">
+            <div class="container">
+                <div class="group-info">
+                    <img :src="'https://beiying.grkx.cn' + info.wxg_img" class="group-icon">
+                    <div class="group-name">
+                        <div class="cr-name">{{info.wxg_title}}</div>
+                    </div>
+                    <div class="group-info-tip">{{info.wxg_subtitle}}</div>
+                </div>
+                
+                <div class="divider-line"></div>
+                
+                <div class="content">
+                    <div class="ext-info">
+                        <div class="info-item">
+                            <div class="dot"></div>
+                            <div>该群聊人数较多，为减少新消息给你带来的打扰，建议谨慎加入。</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="dot"></div>
+                            <div>为维护微信平台绿色网络环境，请勿在群内传播违法违规内容。</div>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-area">
+                        <button 
+                            class="join-btn" 
+                            @click="handlePay" 
+                            :disabled="loading"
+                        >
+                            {{ loading ? '处理中...' : info.wxg_buttitle }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 支付结果弹窗 -->
+                <div class="popup-backdrop" v-if="showPopup" @click="closePopup"></div>
+                <div class="popup-content" v-if="showPopup">
+                    <div class="popup-title">支付提示</div>
+                    <div class="popup-message">{{ popupMessage }}</div>
+                    <button class="popup-btn" @click="closePopup">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                params: {},
+                errorMessage: '',
+                apiResponse: null,
+                loading: true,
+                currentView: '', // 'share', 'share_img', 'share_shp', 'share_gmb'
+                
+                // 共享数据
+                info: {
+                    wxg_img: '',
+                    wxg_title: '',
+                    wxg_subtitle: '',
+                    wxg_buttitle: '加入群聊',
+                    wxg_money: 0,
+                    type: '',
+                    confirm_content: '',
+                    wxg_kefu: '',
+                    hb_img: '',
+                    wxg_qjj_title: '',
+                    wxg_qjj_content: '',
+                    wxg_kuai_title: '',
+                    wxg_kuai_title1: '',
+                    wxg_kuai_imgs1: '',
+                    wxg_redcount: 0,
+                    wxg_dzcount: 0,
+                    wxg_xxcount: 0,
+                    btn_color: '#4A6398',
+                    wxg_headfile: ''
+                },
+                id: 0,
+                qccontent: [],
+                content: [],
+                qcontent: [],
+                randomMemberCount: Math.floor(Math.random() * 201) + 300,
+                
+                // 状态数据
+                showKefu: false,
+                showPayModal: false,
+                btnDisabled: false,
+                showTip: false,
+                currentTip: '',
+                tipNames: ["弘毅","李涛","豪哥","海阔天空","博文","小蓝","吴哥","丰富","格局","天天歌","柒依","晴天","黑羽","(宝ᴗ宝)"],
+                tipInterval: null,
+                showPopup: false,
+                popupMessage: '',
+                payResult: null
+            },
+            computed: {
+                formattedButtonText() {
+                    let text = this.info.wxg_buttitle || '';
+                    text = text.replace(/\$\$加粗\$\$/g, '<strong>').replace(/\$\$\/加粗\$\$/g, '</strong>');
+                    text = text.replace(/\$\$加大\+(\d+)\$\$/g, '<span style="font-size:$1em">').replace(/\$\$\/加大\$\$/g, '</span>');
+                    return text;
+                },
+                processedImgs() {
+                    if (!this.info.wxg_kuai_imgs1) return '';
+                    return this.info.wxg_kuai_imgs1.replace(/src="\//g, 'src="https://beiying.grkx.cn/');
+                }
+            },
+            mounted() {
+                this.parseUrlParams();
+                console.log('获取到的所有URL参数:', this.params);
+                
+                if (!this.params.id) {
+                    this.errorMessage = '缺少必要参数: id';
+                    this.loading = false;
+                    return;
+                }
+                this.fetchData();
+            },
+            methods: {
+                parseUrlParams() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.forEach((value, key) => {
+                        this.params[key] = value;
+                    });
+                },
+                goToHomePage() {
+                    window.location.href = './index.html';
+                },
+                async fetchData() {
+                    try {
+                        const apiUrl = `https://beiying.grkx.cn/group/index/apiShare?id=${this.params.id}`;
+                        console.log('正在请求API:', apiUrl);
+                        
+                        const response = await fetch(apiUrl);
+                        const res = await response.json();
+                        this.apiResponse = res;
+                        
+                        console.log('API响应数据:', res);
+                        
+                        // 修改后的数据验证逻辑
+                        if (!res || !res.wxgroup) {
+                            throw new Error('请求失败: 响应数据无效');
+                        }
+                        
+                        const responseData = res; // 直接使用res而不是res.data
+                        
+                        // 设置当前视图
+                        switch (responseData.wxgroup.wxg_type) {
+                            case 1: this.currentView = 'share'; break;
+                            case 2: this.currentView = 'share_img'; break;
+                            case 3: this.currentView = 'share_gmb'; break;
+                            case 5: this.currentView = 'share_shp'; break;
+                            default:
+                                this.errorMessage = `未知的分享类型: ${responseData.wxgroup.wxg_type}`;
+                                this.loading = false;
+                                return;
+                        }
+                        
+                        // 填充数据
+                        this.info = responseData.wxgroup || {};
+                        this.id = responseData.id || this.id;
+                        this.qccontent = responseData.qccontent || [];
+                        this.content = responseData.content || [];
+                        this.qcontent = responseData.qcontent || [];
+                        
+                        document.title = this.info.wxg_title || '群聊分享';
+                        
+                        // 显示确认内容
+                        if (this.info.confirm_content) {
+                            setTimeout(() => {
+                                alert(this.info.confirm_content);
+                            }, 300);
+                        }
+                        
+                        // 启动提示动画
+                        this.startTipAnimation();
+                        
+                        this.loading = false;
+                        
+                    } catch (error) {
+                        this.errorMessage = `加载失败: ${error.message}`;
+                        this.loading = false;
+                        console.error('错误详情:', error);
+                    }
+                },
+                startTipAnimation() {
+                    let index = 0;
+                    this.tipInterval = setInterval(() => {
+                        this.currentTip = this.tipNames[index];
+                        this.showTip = true;
+                        setTimeout(() => {
+                            this.showTip = false;
+                        }, this.currentView === 'share_shp' ? 1300 : 3000);
+                        index = (index + 1) % this.tipNames.length;
+                    }, this.currentView === 'share_shp' ? 1500 : 5000);
+                },
+                async handlePay() {
+                    if (this.btnDisabled) return;
+                    
+                    try {
+                        this.btnDisabled = true;
+                        
+                        // 根据不同页面类型处理支付
+                        if (this.currentView === 'share_gmb' && this.info.type == "1") {
+                            this.showPaymentOptions();
+                            return;
+                        }
+                        
+                        if (this.currentView === 'share' || this.currentView === 'share_img') {
+                            await this.processPayment('wxpay');
+                        } else if (this.currentView === 'share_shp') {
+                            this.showPayModal = true;
+                        } else {
+                            await this.processPayment('wxpay');
+                        }
+                        
+                    } catch (error) {
+                        console.error('支付流程错误:', error);
+                        this.showMessage(error.message || '支付失败');
+                    } finally {
+                        this.btnDisabled = false;
+                    }
+                },
+                async processPayment(paymentType) {
+                    const params = new URLSearchParams();
+                    params.append('id', this.id);
+                    params.append('type', paymentType);
+                    
+                    const response = await fetch('https://beiying.grkx.cn/group/index/getpay', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Referer': 'https://www.qxlwm.cn/'
+                        },
+                        body: params
+                    });
+                    
+                    const result = await response.json();
+                    console.log('支付结果:', result);
+                    
+                    if (!response.ok) {
+                        throw new Error(result.msg || '支付请求失败');
+                    }
+                    
+                    if (result.status === 1) {
+                        window.location.href = result.msg;
+                    } else if (result.status === 2) {
+                        this.showHtmlResult(result.msg);
+                    } else {
+                        throw new Error(result.msg || '支付处理失败');
+                    }
+                },
+                showPaymentOptions() {
+                    const options = ['微信支付', '支付宝支付'];
+                    const selected = confirm(`请选择支付方式:\n\n1. ${options[0]}\n2. ${options[1]}`);
+                    
+                    if (selected === null) {
+                        this.showMessage('已取消支付');
+                        return;
+                    }
+                    
+                    const type = selected ? 'wxpay' : 'alipay';
+                    this.processPayment(type);
+                },
+                showHtmlResult(html) {
+                    this.payResult = html;
+                    this.showMessage('支付成功，即将跳转...');
+                },
+                showMessage(msg) {
+                    this.popupMessage = msg;
+                    this.showPopup = true;
+                },
+                closePopup() {
+                    this.showPopup = false;
+                    if (this.payResult) {
+                        // 实际项目中这里可以处理支付结果
+                    }
+                },
+                toggleKefu() {
+                    this.showKefu = !this.showKefu;
+                },
+                btnfun(type) {
+                    this.showPayModal = false;
+                    this.processPayment(type);
+                },
+                shareGroup() {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: this.info.wxg_title,
+                            text: this.info.wxg_subtitle,
+                            url: window.location.href
+                        })
+                        .catch(error => console.log('分享失败:', error));
+                    } else {
+                        alert('分享功能在此浏览器不可用');
+                    }
+                },
+                collectGroup() {
+                    alert('收藏成功');
+                },
+                handleVideoPlay() {
+                    console.log('视频开始播放');
+                },
+                handleVideoError(e) {
+                    console.error('视频播放错误:', e);
+                    alert('视频加载失败');
+                }
+            },
+            beforeDestroy() {
+                if (this.tipInterval) {
+                    clearInterval(this.tipInterval);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
